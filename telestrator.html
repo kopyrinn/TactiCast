@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>⚽ Телестратор</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@300;400;500;600;700&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0b0e;
+  --panel: #12141a;
+  --panel2: #1a1d26;
+  --border: #252838;
+  --accent: #00e5ff;
+  --text: #e8eaf0;
+  --muted: #5a5f78;
+  --gold: #ffd600;
+  --green: #00e676;
+  --orange: #ff6d00;
+  --pink: #ff4081;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Manrope', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* HEADER */
+header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.logo {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.logo span { color: var(--gold); }
+
+/* EXPERTS ROW */
+.experts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.expert-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 2px solid transparent;
+  background: var(--panel2);
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  transition: all 0.15s;
+  white-space: nowrap;
+  touch-action: manipulation;
+}
+
+.expert-btn .dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.expert-btn.active {
+  color: var(--text);
+  background: var(--panel);
+}
+
+.expert-btn.active.e0 { border-color: #00e5ff; box-shadow: 0 0 10px #00e5ff44; }
+.expert-btn.active.e1 { border-color: #ff4081; box-shadow: 0 0 10px #ff408144; }
+.expert-btn.active.e2 { border-color: #ffd600; box-shadow: 0 0 10px #ffd60044; }
+.expert-btn.active.e3 { border-color: #00e676; box-shadow: 0 0 10px #00e67644; }
+
+/* VIDEO AREA */
+.video-wrapper {
+  position: relative;
+  flex: 1;
+  background: #000;
+  overflow: hidden;
+}
+
+#yt-player-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#yt-player-container iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.url-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: radial-gradient(ellipse at 50% 60%, #1a2a1a 0%, #0a0b0e 70%);
+}
+
+.url-placeholder .pitch-lines {
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background:
+    linear-gradient(90deg, #fff 1px, transparent 1px) 0 0 / 80px 80px,
+    linear-gradient(#fff 1px, transparent 1px) 0 0 / 80px 80px;
+}
+
+.url-placeholder h2 {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 28px;
+  letter-spacing: 3px;
+  color: var(--text);
+  position: relative;
+}
+
+.url-input-row {
+  display: flex;
+  gap: 8px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+}
+
+.url-input-row input {
+  flex: 1;
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.url-input-row input:focus { border-color: var(--accent); }
+
+.url-input-row button {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: opacity 0.2s;
+}
+
+.url-input-row button:hover { opacity: 0.85; }
+
+.demo-link {
+  font-size: 12px;
+  color: var(--muted);
+  position: relative;
+}
+
+.demo-link a {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* CANVAS */
+#draw-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  cursor: default;
+  touch-action: none;
+  pointer-events: none;
+}
+
+/* PAUSE OVERLAY */
+#pause-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pause-badge {
+  background: rgba(0,0,0,0.7);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 4px 12px;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 14px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pause-badge.visible { opacity: 1; }
+
+/* TOOLBAR */
+.toolbar {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.tool-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.tool-sep {
+  width: 1px;
+  height: 28px;
+  background: var(--border);
+  margin: 0 4px;
+}
+
+.tool-btn {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--panel2);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.15s;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.tool-btn:hover { color: var(--text); border-color: var(--muted); }
+
+.tool-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #000;
+  box-shadow: 0 0 12px #00e5ff55;
+}
+
+.tool-btn.danger { color: #ff5252; border-color: #ff525244; }
+.tool-btn.danger:hover { background: #ff525222; border-color: #ff5252; }
+
+/* BIG PAUSE/PLAY */
+.play-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s;
+  box-shadow: 0 0 20px #00e5ff33;
+}
+
+.play-btn:hover { opacity: 0.9; transform: scale(1.02); }
+.play-btn.paused { background: var(--gold); box-shadow: 0 0 20px #ffd60033; }
+
+/* SIZE SLIDER */
+.size-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  width: 70px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+}
+
+/* OPACITY */
+.opacity-pill {
+  display: flex;
+  gap: 4px;
+  background: var(--panel2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.opacity-pill button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.15s;
+}
+
+.opacity-pill button.active { background: var(--panel); color: var(--text); }
+
+/* ANIMATIONS */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.video-wrapper { animation: fadeIn 0.4s ease; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">ТЕЛО<span>СТРАТОР</span></div>
+
+  <div class="experts" id="experts-row">
+    <button class="expert-btn e0 active" onclick="setExpert(0)">
+      <span class="dot" style="background:#00e5ff"></span>Эксперт 1
+    </button>
+    <button class="expert-btn e1" onclick="setExpert(1)">
+      <span class="dot" style="background:#ff4081"></span>Эксперт 2
+    </button>
+    <button class="expert-btn e2" onclick="setExpert(2)">
+      <span class="dot" style="background:#ffd600"></span>Эксперт 3
+    </button>
+    <button class="expert-btn e3" onclick="setExpert(3)">
+      <span class="dot" style="background:#00e676"></span>Эксперт 4
+    </button>
+  </div>
+</header>
+
+<!-- VIDEO AREA -->
+<div class="video-wrapper" id="video-wrapper">
+
+  <!-- PLACEHOLDER (shows until video loaded) -->
+  <div class="url-placeholder" id="placeholder">
+    <div class="pitch-lines"></div>
+    <h2>⚽ Загрузи видео</h2>
+    <div class="url-input-row">
+      <input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=..." />
+      <button onclick="loadVideo()">▶ Открыть</button>
+    </div>
+    <div class="demo-link">или <a onclick="loadDemo()">загрузи демо-матч</a></div>
+  </div>
+
+  <!-- YT IFRAME -->
+  <div id="yt-player-container" style="display:none"></div>
+
+  <!-- PAUSE BADGE -->
+  <div id="pause-overlay">
+    <div class="pause-badge" id="pause-badge">⏸ ПАУЗА — РИСУЙ</div>
+  </div>
+
+  <!-- DRAW CANVAS -->
+  <canvas id="draw-canvas"></canvas>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+
+  <!-- TOOLS -->
+  <div class="tool-group">
+    <div class="tool-btn active" id="tool-pen"    onclick="setTool('pen')"    title="Карандаш">✏️</div>
+    <div class="tool-btn"       id="tool-arrow"   onclick="setTool('arrow')"  title="Стрелка">➡️</div>
+    <div class="tool-btn"       id="tool-circle"  onclick="setTool('circle')" title="Круг/зона">⭕</div>
+    <div class="tool-btn"       id="tool-line"    onclick="setTool('line')"   title="Линия">╱</div>
+    <div class="tool-btn"       id="tool-erase"   onclick="setTool('erase')"  title="Ластик">🧹</div>
+  </div>
+
+  <div class="tool-sep"></div>
+
+  <!-- SIZE -->
+  <div class="size-row">
+    <span>Толщина</span>
+    <input type="range" min="1" max="20" value="4" id="size-slider" oninput="updateSize(this.value)">
+    <span id="size-val">4</span>
+  </div>
+
+  <div class="tool-sep"></div>
+
+  <!-- OPACITY -->
+  <div class="opacity-pill">
+    <button onclick="setOpacity(1.0)" class="active" id="op100">100%</button>
+    <button onclick="setOpacity(0.6)" id="op60">60%</button>
+    <button onclick="setOpacity(0.3)" id="op30">30%</button>
+  </div>
+
+  <div class="tool-sep"></div>
+
+  <!-- ACTIONS -->
+  <div class="tool-group">
+    <div class="tool-btn" onclick="undo()" title="Отмена">↩️</div>
+    <div class="tool-btn" onclick="clearExpert()" title="Очистить моё" style="font-size:14px">🗑️</div>
+    <div class="tool-btn danger" onclick="clearAll()" title="Очистить всё" style="font-size:14px">✖</div>
+  </div>
+
+  <!-- PLAY/PAUSE -->
+  <button class="play-btn" id="play-btn" onclick="togglePause()">
+    ▶ ПУСК
+  </button>
+</div>
+
+
+<script>
+// ─── STATE ──────────────────────────────────────────────────────────────────
+const EXPERTS = [
+  { name: 'Эксперт 1', color: '#00e5ff' },
+  { name: 'Эксперт 2', color: '#ff4081' },
+  { name: 'Эксперт 3', color: '#ffd600' },
+  { name: 'Эксперт 4', color: '#00e676' },
+];
+
+let currentExpert = 0;
+let currentTool   = 'pen';
+let brushSize     = 4;
+let opacity       = 1.0;
+let isPaused      = false;
+let isDrawing     = false;
+let startX, startY;
+let lastX, lastY;
+
+// Per-expert stroke history [{ expert, imageData }]
+let history = [];
+// Snapshot before current stroke
+let preStrokeSnap = null;
+
+// Canvas
+const canvas = document.getElementById('draw-canvas');
+const ctx    = canvas.getContext('2d');
+
+// YT Player
+let player = null;
+let ytReady = false;
+
+// ─── CANVAS RESIZE ───────────────────────────────────────────────────────────
+function resizeCanvas() {
+  const wrapper = document.getElementById('video-wrapper');
+  const idata   = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  canvas.width  = wrapper.offsetWidth;
+  canvas.height = wrapper.offsetHeight;
+  ctx.putImageData(idata, 0, 0);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ─── EXPERTS ─────────────────────────────────────────────────────────────────
+function setExpert(i) {
+  currentExpert = i;
+  document.querySelectorAll('.expert-btn').forEach((b, idx) => {
+    b.classList.toggle('active', idx === i);
+  });
+}
+
+// ─── TOOLS ───────────────────────────────────────────────────────────────────
+function setTool(t) {
+  currentTool = t;
+  document.querySelectorAll('[id^="tool-"]').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-' + t).classList.add('active');
+  if (isPaused) {
+    canvas.style.cursor = t === 'erase' ? 'cell' : 'crosshair';
+  }
+}
+
+function updateSize(v) {
+  brushSize = parseInt(v);
+  document.getElementById('size-val').textContent = v;
+}
+
+function setOpacity(v) {
+  opacity = v;
+  ['op100','op60','op30'].forEach(id => document.getElementById(id).classList.remove('active'));
+  if (v === 1.0) document.getElementById('op100').classList.add('active');
+  else if (v === 0.6) document.getElementById('op60').classList.add('active');
+  else document.getElementById('op30').classList.add('active');
+}
+
+// ─── PLAY / PAUSE ─────────────────────────────────────────────────────────────
+function togglePause() {
+  if (!player && !document.getElementById('yt-player-container').style.display === 'none') {
+    alert('Сначала загрузи видео!');
+    return;
+  }
+  isPaused = !isPaused;
+  const btn   = document.getElementById('play-btn');
+  const badge = document.getElementById('pause-badge');
+
+  if (isPaused) {
+    btn.textContent = '▶ ПУСК';
+    btn.classList.add('paused');
+    badge.classList.add('visible');
+    canvas.style.pointerEvents = 'auto';
+    canvas.style.cursor = 'crosshair';
+    if (player) player.pauseVideo();
+  } else {
+    btn.innerHTML = '⏸ ПАУЗА';
+    btn.classList.remove('paused');
+    badge.classList.remove('visible');
+    canvas.style.pointerEvents = 'none';
+    canvas.style.cursor = 'default';
+    if (player) player.playVideo();
+    fadeDrawings();
+  }
+}
+
+function fadeDrawings() {
+  let a = 1.0;
+  const iv = setInterval(() => {
+    a -= 0.05;
+    if (a <= 0) {
+      clearAll(true);
+      clearInterval(iv);
+      return;
+    }
+    ctx.globalAlpha = a;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // redraw all history with alpha
+    history.forEach(h => ctx.putImageData(h.imageData, 0, 0));
+    ctx.globalAlpha = 1;
+  }, 40);
+}
+
+// ─── DRAWING ─────────────────────────────────────────────────────────────────
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const src  = e.touches ? e.touches[0] : e;
+  return {
+    x: (src.clientX - rect.left) * (canvas.width / rect.width),
+    y: (src.clientY - rect.top)  * (canvas.height / rect.height),
+  };
+}
+
+function expertColor() {
+  return EXPERTS[currentExpert].color;
+}
+
+function setupCtx() {
+  ctx.strokeStyle = expertColor();
+  ctx.fillStyle   = expertColor();
+  ctx.lineWidth   = brushSize;
+  ctx.lineCap     = 'round';
+  ctx.lineJoin    = 'round';
+  ctx.globalAlpha = opacity;
+  if (currentTool === 'erase') {
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = brushSize * 3;
+  } else {
+    ctx.globalCompositeOperation = 'source-over';
+  }
+}
+
+canvas.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (!isPaused && player) return; // block drawing when playing
+  const pos = getPos(e);
+  isDrawing = true;
+  startX = lastX = pos.x;
+  startY = lastY = pos.y;
+  preStrokeSnap = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  setupCtx();
+
+  if (currentTool === 'pen' || currentTool === 'erase') {
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  }
+});
+
+canvas.addEventListener('pointermove', e => {
+  e.preventDefault();
+  if (!isDrawing) return;
+  const pos = getPos(e);
+
+  if (currentTool === 'pen' || currentTool === 'erase') {
+    setupCtx();
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  } else {
+    // preview shapes
+    ctx.putImageData(preStrokeSnap, 0, 0);
+    setupCtx();
+    drawShape(startX, startY, pos.x, pos.y);
+  }
+  lastX = pos.x; lastY = pos.y;
+});
+
+canvas.addEventListener('pointerup', e => {
+  e.preventDefault();
+  if (!isDrawing) return;
+  isDrawing = false;
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+
+  // save to history
+  history.push({
+    expert: currentExpert,
+    imageData: ctx.getImageData(0, 0, canvas.width, canvas.height)
+  });
+  // keep history short
+  if (history.length > 50) history.shift();
+});
+
+canvas.addEventListener('pointercancel', () => { isDrawing = false; });
+
+function drawShape(x1, y1, x2, y2) {
+  ctx.beginPath();
+  if (currentTool === 'arrow') {
+    drawArrow(x1, y1, x2, y2);
+  } else if (currentTool === 'circle') {
+    const rx = Math.abs(x2 - x1) / 2;
+    const ry = Math.abs(y2 - y1) / 2;
+    const cx = x1 + (x2 - x1) / 2;
+    const cy = y1 + (y2 - y1) / 2;
+    ctx.ellipse(cx, cy, Math.max(rx, 4), Math.max(ry, 4), 0, 0, Math.PI * 2);
+    ctx.globalAlpha = opacity * 0.18;
+    ctx.fill();
+    ctx.globalAlpha = opacity;
+    ctx.stroke();
+  } else if (currentTool === 'line') {
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  }
+}
+
+function drawArrow(x1, y1, x2, y2) {
+  const angle  = Math.atan2(y2 - y1, x2 - x1);
+  const headLen = Math.max(brushSize * 4, 20);
+
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI/6), y2 - headLen * Math.sin(angle - Math.PI/6));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI/6), y2 - headLen * Math.sin(angle + Math.PI/6));
+  ctx.closePath();
+  ctx.fill();
+}
+
+// ─── UNDO / CLEAR ─────────────────────────────────────────────────────────────
+function undo() {
+  // remove last stroke
+  history.pop();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (history.length > 0) {
+    ctx.putImageData(history[history.length - 1].imageData, 0, 0);
+  }
+}
+
+function clearExpert() {
+  // rebuild canvas without current expert's strokes
+  // (simplified: just undo until we hit another expert or empty)
+  while (history.length > 0 && history[history.length - 1].expert === currentExpert) {
+    history.pop();
+  }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (history.length > 0) {
+    ctx.putImageData(history[history.length - 1].imageData, 0, 0);
+  }
+}
+
+function clearAll(silent) {
+  history = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// ─── YOUTUBE ─────────────────────────────────────────────────────────────────
+function extractVideoId(url) {
+  const m = url.match(/(?:v=|youtu\.be\/|embed\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
+function loadVideo() {
+  const url = document.getElementById('yt-url').value.trim();
+  const vid  = extractVideoId(url);
+  if (!vid) { alert('Не удалось распознать ссылку YouTube'); return; }
+  initYT(vid);
+}
+
+function loadDemo() {
+  // Famous football clip - UCL 2005 comeback highlight
+  initYT('PYO4fQdU6HQ');
+}
+
+function initYT(videoId) {
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('yt-player-container').style.display = 'block';
+
+  if (ytReady) {
+    if (player) {
+      player.loadVideoById(videoId);
+    } else {
+      createPlayer(videoId);
+    }
+  } else {
+    window._pendingVideoId = videoId;
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  }
+}
+
+window.onYouTubeIframeAPIReady = function() {
+  ytReady = true;
+  if (window._pendingVideoId) createPlayer(window._pendingVideoId);
+};
+
+function createPlayer(videoId) {
+  const container = document.getElementById('yt-player-container');
+  container.innerHTML = '<div id="yt-player"></div>';
+  player = new YT.Player('yt-player', {
+    videoId,
+    width: '100%',
+    height: '100%',
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      disablekb: 1,
+      modestbranding: 1,
+      rel: 0,
+      playsinline: 1,
+    },
+    events: {
+      onReady: e => {
+        e.target.playVideo();
+        isPaused = false;
+        const btn = document.getElementById('play-btn');
+        btn.innerHTML = '⏸ ПАУЗА';
+        btn.classList.remove('paused');
+      }
+    }
+  });
+}
+
+
+
+// ─── KEYBOARD SHORTCUTS ───────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space') { e.preventDefault(); togglePause(); }
+  if (e.key === 'z' && (e.ctrlKey || e.metaKey)) undo();
+  if (e.key === 'p') setTool('pen');
+  if (e.key === 'a') setTool('arrow');
+  if (e.key === 'c') setTool('circle');
+  if (e.key === 'l') setTool('line');
+  if (e.key === 'e') setTool('erase');
+  if (e.key === '1') setExpert(0);
+  if (e.key === '2') setExpert(1);
+  if (e.key === '3') setExpert(2);
+  if (e.key === '4') setExpert(3);
+});
+
+// init resize
+resizeCanvas();
+</script>
+</body>
+</html>
